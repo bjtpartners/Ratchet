@@ -1,29 +1,35 @@
 <?php
 namespace Ratchet\Server;
+
 use Ratchet\ConnectionInterface;
 use React\Socket\ConnectionInterface as ReactConn;
+use React\EventLoop\LibEventLoop;
 
 /**
  * {@inheritdoc}
  */
-class IoConnection implements ConnectionInterface {
+class IoConnection implements ConnectionInterface
+{
     /**
      * @var \React\Socket\ConnectionInterface
      */
     protected $conn;
-
+    public $loop;
 
     /**
      * @param \React\Socket\ConnectionInterface $conn
      */
-    public function __construct(ReactConn $conn) {
+    public function __construct(ReactConn $conn, LibEventLoop $loop = null)
+    {
         $this->conn = $conn;
+        $this->loop = $loop;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function send($data) {
+    public function send($data)
+    {
         $this->conn->write($data);
 
         return $this;
@@ -32,7 +38,8 @@ class IoConnection implements ConnectionInterface {
     /**
      * {@inheritdoc}
      */
-    public function close() {
+    public function close()
+    {
         $this->conn->end();
     }
 }

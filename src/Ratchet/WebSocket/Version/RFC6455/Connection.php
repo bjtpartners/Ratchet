@@ -2,6 +2,7 @@
 namespace Ratchet\WebSocket\Version\RFC6455;
 
 use Ratchet\AbstractConnectionDecorator;
+use Ratchet\Wamp\Exception;
 use Ratchet\WebSocket\Version\DataInterface;
 use React\Promise\Deferred;
 use React\EventLoop\LibEventLoop;
@@ -37,24 +38,28 @@ class Connection extends AbstractConnectionDecorator
      * @param null $uniqId A id for identify the ping request (call uniqId function if null)
      * @return mixed A promise
      */
-    public function ping(LibEventLoop $loop, $timeout, $uniqId = null)
+    public function ping($timeout, $uniqId = null)
     {
-        $connection = &$this;
+        if (is_null($this->loop))
+            throw new \UnexpectedValueException('No loop event in server');
+
         if (is_null($uniqId))
             $uniqId = uniqid('', true);
         if (!isset($this->WebSocket->pingH))
             $this->WebSocket->pingH = [];
+
         $this->WebSocket->pingH[$uniqId] = new \StdClass;
         $this->WebSocket->pingH[$uniqId]->deferredPong = new \React\Promise\Deferred();
-        $loop->addTimer(0.01, function () use (&$connection, $uniqId, $loop, $timeout) {
-            $connection->WebSocket->pingH[$uniqId]->pongTimer = $loop->addTimer($timeout, function () use (&$connection, $uniqId) {
-                $deferred = $connection->WebSocket->pingH[$uniqId];
-                unset($connection->WebSocket->pingH[$uniqId]);
+
+        $this->loop->addTimer(0.01, function () use ($uniqId, $timeout) {
+            $this->WebSocket->pingH[$uniqId]->pongTimer = $this->loop->addTimer($timeout, function () use ($uniqId) {
+                $deferred = $this->WebSocket->pingH[$uniqId];
+                unset($this->WebSocket->pingH[$uniqId]);
                 $deferred->deferredPong->reject('no response');
             });
-            $connection->WebSocket->pingH[$uniqId]->lastPingTimestamp = (new \DateTime())->getTimestamp();
+            $this->WebSocket->pingH[$uniqId]->lastPingTimestamp = (new \DateTime())->getTimestamp();
             $frame = new Frame($uniqId, true, Frame::OP_PING);
-            $connection->send($frame);
+            $this->send($frame);
         });
         return $this->WebSocket->pingH[$uniqId]->deferredPong->promise();
     }
@@ -68,17 +73,16 @@ class Connection extends AbstractConnectionDecorator
      * @param int $interval Duration between two sending of ping request
      * @param float $timeout Timeout before the connection is considered as dead
      */
-    public function keepAlive(LibEventLoop $loop, $interval = 5, $timeout = 0.5)
+    public function keepAlive($interval = 5, $timeout = 0.5)
     {
-        $conn = $this;
-        $loop->addPeriodicTimer($interval, function ($timer) use ($loop, $conn, $timeout) {
-            $conn->ping($loop, $timeout, 'keepAlive')->then(
+        $this->loop->addPeriodicTimer($interval, function ($timer) use ($timeout) {
+            $this->ping($timeout, 'keepAlive')->then(
                 function ($timestamp) {
                 },
-                function () use ($conn, $timer) {
+                function () use ($timer) {
                     $timer->cancel();
-                    unset($conn->WebSocket->pingH['keepAlive']);
-                    $conn->close();
+                    unset($this->WebSocket->pingH['keepAlive']);
+                    $this->close();
                 });
         });
     }
