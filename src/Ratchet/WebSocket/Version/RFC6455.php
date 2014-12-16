@@ -211,11 +211,16 @@ class RFC6455 implements VersionInterface
             $parsed = $from->WebSocket->message->getPayload();
             unset($from->WebSocket->message);
 
-            if (!$this->validator->checkEncoding($parsed, 'UTF-8')) {
-                return $from->close(Frame::CLOSE_BAD_PAYLOAD);
-            }
+            if ($opcode == Frame::OP_BINARY) {
+                $from->WebSocket->coalescedCallback->onBinaryMessage($from, $data);
 
-            $from->WebSocket->coalescedCallback->onMessage($from, $parsed);
+            } else {
+                if ($opcode == Frame::OP_TEXT && !$this->validator->checkEncoding($parsed, 'UTF-8')) {
+                    return $from->close(Frame::CLOSE_BAD_PAYLOAD);
+                }
+
+                $from->WebSocket->coalescedCallback->onMessage($from, $parsed);
+            }
         }
 
         if (strlen($overflow) > 0) {
