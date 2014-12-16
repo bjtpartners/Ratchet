@@ -29,6 +29,24 @@ class Connection extends AbstractConnectionDecorator
         return $this;
     }
 
+    /**
+     * Binary data sending
+     * @param $data Binary data
+     * @return $this
+     */
+    public function binarySend($data)
+    {
+        if (!$this->WebSocket->closing) {
+            if (!($data instanceof DataInterface)) {
+                $data = new Frame($data, true, Frame::OP_BINARY);
+            }
+
+            $this->getConnection()->send($data->getContents());
+        }
+
+        return $this;
+    }
+
 
     /**
      * Send a ping frame to the connection and return a promise
