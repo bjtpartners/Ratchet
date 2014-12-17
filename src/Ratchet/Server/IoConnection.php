@@ -14,6 +14,10 @@ class IoConnection implements ConnectionInterface
      * @var \React\Socket\ConnectionInterface
      */
     protected $conn;
+
+    /**
+     * @var \React\LibEventLoop\LibEventLoop
+     */
     public $loop;
 
     /**
