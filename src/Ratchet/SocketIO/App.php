@@ -1,5 +1,7 @@
 <?php
 namespace Ratchet;
+session_start();
+
 use React\EventLoop\LoopInterface;
 use React\EventLoop\Factory as LoopFactory;
 use React\Socket\Server as Reactor;
@@ -21,7 +23,8 @@ use Symfony\Component\Routing\Matcher\UrlMatcher;
  * An opinionated facade class to quickly and easily create a WebSocket server.
  * A few configuration assumptions are made and some best-practice security conventions are applied by default.
  */
-class App {
+class App
+{
     /**
      * @var \Symfony\Component\Routing\RouteCollection
      */
@@ -55,12 +58,13 @@ class App {
     protected $_routeCounter = 0;
 
     /**
-     * @param string        $httpHost HTTP hostname clients intend to connect to. MUST match JS `new WebSocket('ws://$httpHost');`
-     * @param int           $port     Port to listen on. If 80, assuming production, Flash on 843 otherwise expecting Flash to be proxied through 8843
-     * @param string        $address  IP address to bind to. Default is localhost/proxy only. '0.0.0.0' for any machine.
-     * @param LoopInterface $loop     Specific React\EventLoop to bind the application to. null will create one for you.
+     * @param string $httpHost HTTP hostname clients intend to connect to. MUST match JS `new WebSocket('ws://$httpHost');`
+     * @param int $port Port to listen on. If 80, assuming production, Flash on 843 otherwise expecting Flash to be proxied through 8843
+     * @param string $address IP address to bind to. Default is localhost/proxy only. '0.0.0.0' for any machine.
+     * @param LoopInterface $loop Specific React\EventLoop to bind the application to. null will create one for you.
      */
-    public function __construct($httpHost = 'localhost', $port = 8080, $address = '127.0.0.1', LoopInterface $loop = null) {
+    public function __construct($httpHost = 'localhost', $port = 8080, $address = '127.0.0.1', LoopInterface $loop = null)
+    {
         if (extension_loaded('xdebug')) {
             trigger_error('XDebug extension detected. Remember to disable this if performance testing or going live!', E_USER_WARNING);
         }
@@ -79,7 +83,7 @@ class App {
         $socket = new Reactor($loop);
         $socket->listen($port, $address);
 
-        $this->routes  = new RouteCollection;
+        $this->routes = new RouteCollection;
         $this->_server = new IoServer(new HttpServer(new Router(new UrlMatcher($this->routes, new RequestContext))), $socket, $loop);
 
         $policy = new FlashPolicy;
@@ -96,13 +100,14 @@ class App {
 
     /**
      * Add an endpiont/application to the server
-     * @param string             $path The URI the client will connect to
+     * @param string $path The URI the client will connect to
      * @param ComponentInterface $controller Your application to server for the route. If not specified, assumed to be for a WebSocket
-     * @param array              $allowedOrigins An array of hosts allowed to connect (same host by default), ['*'] for any
-     * @param string             $httpHost Override the $httpHost variable provided in the __construct
+     * @param array $allowedOrigins An array of hosts allowed to connect (same host by default), ['*'] for any
+     * @param string $httpHost Override the $httpHost variable provided in the __construct
      * @return ComponentInterface|WsServer
      */
-    public function route($path, ComponentInterface $controller, array $allowedOrigins = array(), $httpHost = null) {
+    public function route($path, ComponentInterface $controller, array $allowedOrigins = array(), $httpHost = null)
+    {
         if ($controller instanceof HttpServerInterface || $controller instanceof WsServer) {
             $decorated = $controller;
         } elseif ($controller instanceof WampServerInterface) {
@@ -126,8 +131,8 @@ class App {
         }
 
         //allow origins in flash policy server
-        if(empty($this->flashServer) === false) {
-            foreach($allowedOrigins as $allowedOrgin) {
+        if (empty($this->flashServer) === false) {
+            foreach ($allowedOrigins as $allowedOrgin) {
                 $this->flashServer->app->addAllowedAccess($allowedOrgin, $this->port);
             }
         }
@@ -140,7 +145,8 @@ class App {
     /**
      * Run the server by entering the event loop
      */
-    public function run() {
+    public function run()
+    {
         $this->_server->run();
     }
 }
