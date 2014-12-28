@@ -5,7 +5,6 @@ use Ratchet\AbstractConnectionDecorator;
 use Ratchet\Wamp\Exception;
 use Ratchet\WebSocket\Version\DataInterface;
 use React\Promise\Deferred;
-use React\EventLoop\LibEventLoop;
 
 /**
  * {@inheritdoc}
@@ -33,7 +32,6 @@ class Connection extends AbstractConnectionDecorator
     /**
      * Send a ping frame to the connection and return a promise
      *
-     * @param LibEventLoop $loop The loop for timeout managment
      * @param $timeout Timeout before the connection is considered as dead
      * @param null $uniqId A id for identify the ping request (call uniqId function if null)
      * @return mixed A promise
@@ -69,7 +67,6 @@ class Connection extends AbstractConnectionDecorator
      * Check if the connection is up by a periodic send of ping request to the connection.
      * Call close if the ping fail.
      *
-     * @param LibEventLoop $loop
      * @param int $interval Duration between two sending of ping request
      * @param float $timeout Timeout before the connection is considered as dead
      */

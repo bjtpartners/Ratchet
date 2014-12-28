@@ -3,7 +3,7 @@ namespace Ratchet\Server;
 
 use Ratchet\ConnectionInterface;
 use React\Socket\ConnectionInterface as ReactConn;
-use React\EventLoop\LibEventLoop;
+use React\EventLoop\LoopInterface;
 
 /**
  * {@inheritdoc}
@@ -23,7 +23,7 @@ class IoConnection implements ConnectionInterface
     /**
      * @param \React\Socket\ConnectionInterface $conn
      */
-    public function __construct(ReactConn $conn, LibEventLoop $loop = null)
+    public function __construct(ReactConn $conn, LoopInterface $loop = null)
     {
         $this->conn = $conn;
         $this->loop = $loop;
