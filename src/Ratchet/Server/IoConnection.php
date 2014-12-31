@@ -16,7 +16,7 @@ class IoConnection implements ConnectionInterface
     protected $conn;
 
     /**
-     * @var \React\LibEventLoop\LibEventLoop
+     * @var \React\EventLoop\LoopInterface
      */
     public $loop;
 
